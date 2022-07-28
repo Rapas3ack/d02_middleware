@@ -12,13 +12,13 @@ const users = [];
 function checksExistsUserAccount(req, res, next) {
   const {username} = req.headers;
 
-  const user = users.find(user => user.username === username);
+  const existsUser = users.find((user) => user.username === username);
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found.' });
+  if (!existsUser) {
+    return res.status(404).json({ error: 'User not found' });
   }
 
-  req.user = user;
+  req.user = existsUser;
 
   return next();
 }
@@ -26,7 +26,7 @@ function checksExistsUserAccount(req, res, next) {
 function checksCreateTodosUserAvailability(req, res, next) {
   const { user } = req;
 
-  if (user.pro === false && user.todos.length >= 10 ) {
+  if (!user.pro && user.todos.length >= 10 ) {
     return res.status(403).json({ error: 'User not pro or has reached the limit of 10 todos' });
   } 
   
@@ -35,26 +35,26 @@ function checksCreateTodosUserAvailability(req, res, next) {
 
 function checksTodoExists(req, res, next) {
   const {username} = req.headers;
-  const {todoId} = req.params;
+  const {id} = req.params;
   
-  const user = users.find((user) => user.username === username);
+  const existsUser = users.find((user) => user.username === username);
   
-  if (!user) {
+  if (!existsUser) {
     return res.status(404).json({ error: 'User not found!' });
   }
 
-  if (!validate(todoId)) {
+  if (!validate(id)) {
     return res.status(400).json({ error: 'ID is not a UUID' });
   }
 
-  const todo = user.todos.find((todo) => todo.id === todoId);
+  const existsTodo = existsUser.todos.find((todo) => todo.id === id);
 
-  if (!todo) {
+  if (!existsTodo) {
     return res.status(404).json({ error: 'Todo not found.' });
   }
 
-  req.user = user;
-  req.todo = todo;
+  req.user = existsUser;
+  req.todo = existsTodo;
   
   return next();
 }
@@ -62,17 +62,22 @@ function checksTodoExists(req, res, next) {
 function findUserById(req, res, next) {
   const {id} = req.params;
 
-  const user = users.find((user) => user.id === id);
+  const existsUser = users.find((user) => user.id === id);
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found.' });
+  if (!existsUser) {
+    return res.status(404).json({ error: 'User not found!' });
   }
 
-  req.user = user;
+  if (!validate(id)) {
+    return res.status(400).json({ error: 'ID is not a UUID' });
+  }
+
+  req.user = existsUser;
+
   return next();
 }
 
-app.post('/users', checksExistsUserAccount, (req, res) => {
+app.post('/users', (req, res) => {
   const { name, username } = req.body;
 
   const usernameAlreadyExists = users.some((user) => user.username === username);
